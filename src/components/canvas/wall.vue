@@ -21,7 +21,7 @@
 <script setup lang="ts">
 const props = defineProps({
   coordinate: {
-    type: Number,
+    type: String,
     required: true,
     default: 1
   }
