@@ -39,6 +39,10 @@ const scale = ref(1)
 const isWheelPage = ref(false)
 const clipped = ref(false)
 const firstClippedCoordinated = ref()
+const displaySize = reactive({
+  width: 0,
+  height: 0
+})
 
 
 // COMPUTED
@@ -75,9 +79,13 @@ const mouseMoveHandler = (e) => {
         y: e.y
       }
     }
-      console.log(firstClippedCoordinated.value.x, e.x)
-    translate3d.x += (e.x - firstClippedCoordinated.value.x) / 10
-    translate3d.y += (e.y - firstClippedCoordinated.value.y) / 10
+    // console.log(firstClippedCoordinated.value.x, e.x, (e.x - firstClippedCoordinated.value.x) / 10, (e.y - firstClippedCoordinated.value.y) / 10)
+    translate3d.x += e.x - firstClippedCoordinated.value.x
+    translate3d.y += e.y - firstClippedCoordinated.value.y
+    firstClippedCoordinated.value = {
+      x: e.x,
+      y: e.y
+    }
   }
 }
 
@@ -88,8 +96,12 @@ const zoomHandler = (wheelDelta) => {
     scale.value += wheelDelta / 1000
     translate3d.x += -wheelDelta * 4
     translate3d.y += -wheelDelta * 4
-    sizes.width += wheelDelta * 10
-    sizes.height += wheelDelta * 10
+    if (sizes.width + wheelDelta * 10 > displaySize.width + 1000) {
+      sizes.width += wheelDelta * 10
+    }
+    if (sizes.height + wheelDelta * 10 > displaySize.height + 1000) {
+      sizes.height += wheelDelta * 10
+    }
   }
 }
 
@@ -106,12 +118,19 @@ const wheelHandler = (e) => {
 
 // ONMOUNTED
 onMounted(() => {
+  displaySize.width = window.outerWidth
+  displaySize.height = window.outerHeight
 })
 
 
 // WATCH
-watch(isWheelPage, () => {
-  console.log(isWheelPage.value)
+watch(translate3d, () => {
+  if (translate3d.x >= 0) {
+    translate3d.x = 0
+  }
+  if (translate3d.y >= 0) {
+    translate3d.y = 0
+  }
 })
 </script>
 
