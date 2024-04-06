@@ -6,58 +6,62 @@
       :puid="`p${3 * (index + 1)}`"
       :id="`wall-${index + 1}`"
       :coordinate="coordinate"
+      @update-positions="updatePositions($event, index)"
+      @start-update-positions="startUpdatePositions"
+      @stop-update-positions="stopUpdatePositions"
     />
-<!--    <g etype="wall" puid="p3">-->
-<!--      <path fill="#5f6975" stroke-linecap="square" stroke="#5f6975" stroke-width="0" stroke-opacity="1"-->
-<!--            id="uid22" d="M-5,-5 5.1,5.100000000000023 504.9,5.1 515,-5 -5,-5 " etype="path"-->
-<!--            opacity="1"></path>-->
-<!--      <path fill="red" id="uid23" d="M5.099999999999999,0.10000000000002274L504.9,0.09999999999999964"-->
-<!--            etype="path"></path>-->
-<!--      <path class="wallSelector" stroke-linecap="square" cursor="move" stroke="#5f6975"-->
-<!--            stroke-opacity="0.01" opacity="0" id="uid24"-->
-<!--            d="M-5,-5 5.1,5.100000000000023 504.9,5.1 515,-5 -5,-5 " etype="path"></path>-->
-<!--    </g>-->
-<!--    <g etype="wall" puid="p6">-->
-<!--      <path fill="#00b368" stroke-linecap="square" stroke="#5f6975" stroke-width="0" stroke-opacity="1"-->
-<!--            id="uid29" d="M515,-5 504.9,5.1 504.9,504.9 515,515 515,-5 " etype="path"-->
-<!--            opacity="1"></path>-->
-<!--      <path fill="red" id="uid30" d="M509.9,5.1L509.9,504.9" etype="path"></path>-->
-<!--      <path class="wallSelector" stroke-linecap="square" cursor="move" stroke="#5f6975"-->
-<!--            stroke-opacity="0.01" opacity="0" id="uid31"-->
-<!--            d="M515,-5 504.9,5.1 504.9,504.9 515,515 515,-5 " etype="path"></path>-->
-<!--    </g>-->
-<!--    <g etype="wall" puid="p9">-->
-<!--      <path fill="#00b368" stroke-linecap="square" stroke="#5f6975" stroke-width="0" stroke-opacity="1"-->
-<!--            id="uid36" d="M515,515 504.9,504.9 5.100000000000023,504.9 -5,515 515,515 " etype="path"-->
-<!--            opacity="1"></path>-->
-<!--      <path fill="red" id="uid37" d="M504.9,509.9L5.100000000000023,509.9" etype="path"></path>-->
-<!--      <path class="wallSelector" stroke-linecap="square" cursor="move" stroke="#5f6975"-->
-<!--            stroke-opacity="0.01" opacity="0" id="uid38"-->
-<!--            d="M515,515 504.9,504.9 5.100000000000023,504.9 -5,515 515,515 " etype="path"></path>-->
-<!--    </g>-->
-<!--    <g etype="wall" puid="p12">-->
-<!--      <path fill="#00b368" stroke-linecap="square" stroke="#5f6975" stroke-width="0" stroke-opacity="1"-->
-<!--            id="uid43" d="M-5,515 5.100000000000023,504.9 5.1,5.100000000000023 -5,-5 -5,515 "-->
-<!--            etype="path" opacity="1"></path>-->
-<!--      <path fill="red" id="uid44" d="M0.10000000000002274,504.9L0.09999999999999964,5.100000000000022"-->
-<!--            etype="path"></path>-->
-<!--      <path class="wallSelector" stroke-linecap="square" cursor="move" stroke="#5f6975"-->
-<!--            stroke-opacity="0.01" opacity="0" id="uid45"-->
-<!--            d="M-5,515 5.100000000000023,504.9 5.1,5.100000000000023 -5,-5 -5,515 " etype="path"></path>-->
-<!--    </g>-->
   </g>
 </template>
 
 <script setup lang="ts">
 import WallBlock from './wall.vue'
-import {ref} from 'vue'
-const coordinates = ref([
-  // 'M-5,-4.999999999999886 5.1,5.10000000000008 504.9,5.1 515,-5 -5,-4.999999999999886',
-  'M-5,-5 5.1,5.100000000000023 605.5384628287578,5.1 615.638462828758,-5 -5,-5 ', // 5, 7
-  'M515,-5 604.9,5.1 604.9,504.9 615,515 615,-5', // 3, 5, 7, 9
-  'M615,515 604.9,504.9 5.100000000000023,504.9 -5,515 515,515', // 1, 3
-  'M-5,515 5.100000000000023,504.9 5.1,5.100000000000023 -5,-5 -5,515' //
-])
+import {computed, ref} from 'vue'
+import {useWallsStore} from '../../store'
+
+const lastClippedCoordinated = ref()
+const moveDirection = ref(0) // 1 - x(right -left), 2 - y(up-down), 0 - not
+const wallsStore = useWallsStore()
+const coordinatePositions = wallsStore.coordinatePositions
+
+
+const coordinates = computed(() => {
+  return coordinatePositions.map((e) => {
+    return `M${e.p1[0]}, ${e.p1[1]} ${e.p2[0]}, ${e.p2[1]} ${e.p3[0]}, ${e.p3[1]} ${e.p4[0]}, ${e.p4[1]} ${e.p1[0]}, ${e.p1[1]} `
+  })
+})
+
+
+const updatePositions = (positions, index) => {
+  if (!moveDirection.value && lastClippedCoordinated.value) {
+    if (Math.abs(lastClippedCoordinated.value?.x - positions.x) > Math.abs(lastClippedCoordinated.value?.y - positions.y)) {
+      moveDirection.value = 1
+    } else {
+      moveDirection.value = 2
+    }
+  }
+  if (!lastClippedCoordinated.value) {
+    lastClippedCoordinated.value = {
+      x: positions.x,
+      y: positions.y
+    }
+  }
+  // console.log(moveDirection.value)
+  for (let i = 0; i < 4; i++) {
+    wallsStore.setCoordinatePosition(`p${(index * 2 + i) % 8}`, moveDirection.value ? moveDirection.value - 1 : 0, positions[moveDirection.value === 2 ? 'y' : 'x'] - lastClippedCoordinated.value[moveDirection.value === 2 ? 'y' : 'x'])
+  }
+
+  lastClippedCoordinated.value = {
+    x: positions.x,
+    y: positions.y
+  }
+}
+const startUpdatePositions = () => {
+  lastClippedCoordinated.value = null
+}
+const stopUpdatePositions = () => {
+  lastClippedCoordinated.value = null
+  moveDirection.value = 0
+}
 </script>
 
 <style scoped>

@@ -19,6 +19,8 @@
 <script setup lang="ts">
 import SvgView from './svgView.vue'
 import {computed, onMounted, reactive, ref, watch} from 'vue'
+import {useMouse, useMouseUp } from '../../composables/useMouse'
+import {useMouseStore, useControlsStore} from '../../store'
 
 // CONST
 const bgColor = ref('rgb(235, 216, 194)')
@@ -38,11 +40,14 @@ const translate3d = reactive({
 const scale = ref(1)
 const isWheelPage = ref(false)
 const clipped = ref(false)
-const firstClippedCoordinated = ref()
+const lastClippedCoordinated = ref()
 const displaySize = reactive({
   width: 0,
   height: 0
 })
+const { mouseMove } = useMouse()
+const mouseStore = useMouseStore()
+const controlsStore = useControlsStore()
 
 
 // COMPUTED
@@ -68,23 +73,27 @@ const mouseDownHandler = () => {
 
 const mouseUpHandler = () => {
   clipped.value = false
-  firstClippedCoordinated.value = null
+  lastClippedCoordinated.value = null
 }
 
-const mouseMoveHandler = (e) => {
+const mouseMoveHandler = () => {
+  mouseStore.setPosition(mouseMove)
   if (clipped.value) {
-    if (!firstClippedCoordinated.value) {
-      firstClippedCoordinated.value = {
-        x: e.x,
-        y: e.y
+    if (!lastClippedCoordinated.value) {
+      lastClippedCoordinated.value = {
+        x: mouseMove.value.x,
+        y: mouseMove.value.y
       }
     }
-    // console.log(firstClippedCoordinated.value.x, e.x, (e.x - firstClippedCoordinated.value.x) / 10, (e.y - firstClippedCoordinated.value.y) / 10)
-    translate3d.x += e.x - firstClippedCoordinated.value.x
-    translate3d.y += e.y - firstClippedCoordinated.value.y
-    firstClippedCoordinated.value = {
-      x: e.x,
-      y: e.y
+    // console.log(translate3d.x + e.x - lastClippedCoordinated.value.x)
+    // if (translate3d.x + e.x - lastClippedCoordinated.value.x < -1400 || translate3d.y + e.y - lastClippedCoordinated.value.y < -1400) {
+    //   return
+    // }
+    translate3d.x += mouseMove.value.x - lastClippedCoordinated.value.x
+    translate3d.y += mouseMove.value.y - lastClippedCoordinated.value.y
+    lastClippedCoordinated.value = {
+      x: mouseMove.value.x,
+      y: mouseMove.value.y
     }
   }
 }
@@ -117,6 +126,7 @@ const wheelHandler = (e) => {
 }
 
 // ONMOUNTED
+useMouseUp(mouseUpHandler)
 onMounted(() => {
   displaySize.width = window.outerWidth
   displaySize.height = window.outerHeight
@@ -131,6 +141,17 @@ watch(translate3d, () => {
   if (translate3d.y >= 0) {
     translate3d.y = 0
   }
+  // if (!isWheelPage.value) {
+  //   if (Math.abs(translate3d.x) + 1000 >= sizes.width) {
+  //     translate3d.x = sizes.width
+  //   }
+  //   if (Math.abs(translate3d.y) + 1000 >= sizes.height) {
+  //     translate3d.y = sizes.height
+  //   }
+  // }
+})
+watch(mouseMove, () => {
+  mouseMoveHandler()
 })
 </script>
 

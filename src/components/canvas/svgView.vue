@@ -1,6 +1,5 @@
 <template>
-  <svg version="1.1" height="100%" width="100%" xmlns="http://www.w3.org/2000/svg"
-       style="overflow-x: hidden; overflow-y: hidden;">
+  <svg version="1.1" height="100%" width="100%" xmlns="http://www.w3.org/2000/svg" style="overflow-x: hidden; overflow-y: hidden;">
     <g etype="TPaper" :transform="`translate(-0.5, -0.5)scale(${props.scale})`">
       <rect fill="#EBD8C2" id="uid5" etype="rect" x="0" y="0" width="8000" height="8000"></rect>
       <g etype="Image"></g>

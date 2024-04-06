@@ -3,7 +3,7 @@
     <g etype="Ground" style=""></g>
     <g etype="Path" style=""></g>
     <g etype="BgRooms" style="">
-      <polygon fill="url(#uid21)" id="uid20" points="0,0 510,0 510,510 0,510 0,0" etype="polygon"
+      <polygon fill="url(#uid21)" id="uid20" :points="coordinates" etype="polygon"
                transform="translate(3750,3750)" fill-opacity="1" cursor="move"></polygon>
     </g>
     <RoomsBlock/>
@@ -32,6 +32,28 @@
 
 <script setup lang="ts">
 import RoomsBlock from './rooms.vue'
+import {useWallsStore} from '../../store'
+import {computed} from 'vue'
+
+const wallsStore = useWallsStore()
+const storeCoordinates = wallsStore.coordinates
+const coordinates = computed(() => {
+  const p1 = (storeCoordinates.p0[0] + storeCoordinates.p1[0]) / 2
+  const p2 = (storeCoordinates.p0[1] + storeCoordinates.p1[1]) / 2
+  const p3 = (storeCoordinates.p2[0] + storeCoordinates.p3[0]) / 2
+  const p4 = (storeCoordinates.p2[1] + storeCoordinates.p3[1]) / 2
+  const p5 = (storeCoordinates.p4[0] + storeCoordinates.p5[0]) / 2
+  const p6 = (storeCoordinates.p4[1] + storeCoordinates.p5[1]) / 2
+  const p7 = (storeCoordinates.p6[0] + storeCoordinates.p7[0]) / 2
+  const p8 = (storeCoordinates.p6[1] + storeCoordinates.p7[1]) / 2
+  return `
+    ${p1}, ${p2}
+    ${p3}, ${p4}
+    ${p5}, ${p6}
+    ${p7}, ${p8}
+    ${p1}, ${p2}
+  `
+})
 </script>
 
 <style scoped>
